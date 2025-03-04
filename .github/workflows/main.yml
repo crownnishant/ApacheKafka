@@ -26,6 +26,7 @@ jobs:
         run: mvn clean install -DskipTests=false
 
       - name: Run Unit Tests
+        working-directory: ApacheKafka
         run: mvn test
 
   docker:
