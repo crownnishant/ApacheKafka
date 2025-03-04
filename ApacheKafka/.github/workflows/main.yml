@@ -1,0 +1,27 @@
+name: Build and Deploy Apache Kafka
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-deploy:
+    name: Build & Deploy ApacheKafka
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: 17
+
+      - name: Build & Run Tests
+        run: mvn clean install -DskipTests=false
+
+      - name: Run Unit Tests
+        run: mvn test
