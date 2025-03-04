@@ -23,7 +23,7 @@ jobs:
 
       - name: Build with Maven
         working-directory: ApacheKafka  # Make sure this directory contains pom.xml
-        run: mvn clean install -DskipTests=false
+        run: mvn clean package -DskipTests=false
 
       - name: Run Unit Tests
         working-directory: ApacheKafka
