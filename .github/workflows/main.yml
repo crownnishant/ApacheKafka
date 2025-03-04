@@ -11,17 +11,18 @@ jobs:
     runs-on: windows-latest  # Use Windows for the build process
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set Up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'corretto'
+          distribution: 'temurin'
           java-version: 17
           cache: maven
 
-      - name: Build & Run Tests on Windows
+      - name: Build with Maven
+        working-directory: D:\a\ApacheKafka
         run: mvn clean install -DskipTests=false
 
       - name: Run Unit Tests
