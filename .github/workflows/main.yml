@@ -22,7 +22,7 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        working-directory: ApacheKafka
+        working-directory: ApacheKafka  # Make sure this directory contains pom.xml
         run: mvn clean install -DskipTests=false
 
       - name: Run Unit Tests
@@ -32,38 +32,39 @@ jobs:
   docker:
     name: Build & Push Docker Image
     needs: build-deploy
-    runs-on: windows-latest
+    runs-on: ubuntu-latest  # Fix: Changed from Windows to Ubuntu for Docker
+
     steps:
       - name: Checkout Code
-        uses: actions/build-push-action@v2
+        uses: actions/checkout@v4  # Fix: Corrected the step
 
-      - name: Login to DockerHub
+      - name: Login to DockerHub  # Fix: Moved before build & push
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker Image on Windows
-        run: |
-          docker build -t myapp:${{ github.sha }} .
-          docker tag myapp:${{ github.sha }} mydockerhubuser/myapp:latest
-
-      - name: Push Docker Image
-        run: docker push mydockerhubuser/myapp:latest
+      - name: Build & Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/apachekafka:latest
 
   deploy:
     name: Deploy to Server
     needs: docker
-    runs-on: windows-latest
+    runs-on: ubuntu-latest  # Fix: Use Ubuntu for deployment
+
     steps:
-      - name: Deploy via SSH (from Windows)
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            docker pull mydockerhubuser/myapp:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/apachekafka:latest
             docker stop spring-boot-app || true
             docker rm spring-boot-app || true
-            docker run -d --name spring-boot-app -p 8080:8080 mydockerhubuser/myapp:latest
+            docker run -d --name spring-boot-app -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/apachekafka:latest
