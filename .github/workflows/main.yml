@@ -25,6 +25,9 @@ jobs:
         working-directory: ApacheKafka  # Make sure this directory contains pom.xml
         run: mvn clean package -DskipTests=false
 
+      - name: Verify JAR file exists
+        run: ls -R ApacheKafka/target/
+
       - name: Run Unit Tests
         working-directory: ApacheKafka
         run: mvn test
