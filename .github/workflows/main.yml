@@ -1,0 +1,70 @@
+name: CI/CD Pipeline for Apache Kafka on Windows
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-deploy:
+    name: Build & Deploy ApacheKafka
+    runs-on: windows-latest  # Use Windows for the build process
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: maven
+
+      - name: Build with Maven
+        working-directory: ApacheKafka  # Make sure this directory contains pom.xml
+        run: mvn clean install -DskipTests=false
+
+      - name: Run Unit Tests
+        working-directory: ApacheKafka
+        run: mvn test
+
+  docker:
+    name: Build & Push Docker Image
+    needs: build-deploy
+    runs-on: ubuntu-latest  # Fix: Changed from Windows to Ubuntu for Docker
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4  # Fix: Corrected the step
+
+      - name: Login to DockerHub  # Fix: Moved before build & push
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/apachekafka:latest
+
+  deploy:
+    name: Deploy to Server
+    needs: docker
+    runs-on: ubuntu-latest  # Fix: Use Ubuntu for deployment
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_USERNAME }}/apachekafka:latest
+            docker stop spring-boot-app || true
+            docker rm spring-boot-app || true
+            docker run -d --name spring-boot-app -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/apachekafka:latest
