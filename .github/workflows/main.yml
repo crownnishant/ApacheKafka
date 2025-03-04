@@ -22,7 +22,7 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        working-directory: pom.xml
+        working-directory: D:\a\ApacheKafka\ApacheKafka
         run: mvn clean install -DskipTests=false
 
       - name: Run Unit Tests
