@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the built JAR file from target/ directory
-COPY ApacheKafka\target/ApacheKafka-0.0.1-SNAPSHOT.jar /app/ApacheKafka.jar
+COPY ApacheKafka/target/ApacheKafka-0.0.1-SNAPSHOT.jar /app/ApacheKafka.jar
 
 # Expose the application port
 EXPOSE 8080
